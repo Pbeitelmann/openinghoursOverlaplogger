@@ -57,12 +57,18 @@ class OpeninghoursOverlapLogger {
     public function execute() {
 
         if(isset($this->restaurantId)) {
-            $invalidOpeninghours = $this->check($this->restaurantId);
+            $invalidOpeninghours[$this->restaurantId] = $this->check($this->restaurantId);
         } else {
             $invalidOpeninghours = $this->checkAll();
         }
-        $this->logToFile("normalOpeninghoursOverlaps.txt", $invalidOpeninghours["normal"]);
-        $this->logToFile("specialOpeninghoursOverlaps.txt", $invalidOpeninghours["special"]);
+        foreach($invalidOpeninghours as $id => $invalidOpeninghour) {
+            if(!empty($invalidOpeninghour["normal"])) {
+                $this->logToFile("normalOpeninghoursOverlaps.txt", $invalidOpeninghour["normal"], $id);
+            }
+            if(!empty($invalidOpeninghour["special"])) {
+                $this->logToFile("specialOpeninghoursOverlaps.txt", $invalidOpeninghour["special"], $id);
+            }
+        }
     }
 
 
@@ -84,7 +90,7 @@ class OpeninghoursOverlapLogger {
         $invalidOpeninghours = [];
         foreach($activeRestaurantIds as $entry) {
             printf("(" . $i . " / " . $count . ")" . PHP_EOL);
-            $invalidOpeninghours[$entry["id"]][] = $this->check($entry["id"]);
+            $invalidOpeninghours[$entry["id"]] = $this->check($entry["id"]);
             $i++;
         }
 
@@ -184,12 +190,12 @@ class OpeninghoursOverlapLogger {
         $lieferandoOpenings = $this->getLieferandoOpenings($mapping["result"]["data"]["lieferando_id"]);
 
         foreach($lieferandoOpenings as $opening) {
-            if($opening["day"] = 10) {
+            if($opening["day"] == 10) {
                 continue;
             }
             if($this->checkForOverlap($lieferandoOpenings, $opening) == true) {
                 $day = $dayMap[$opening["day"]];
-                $invalidDates[$mapping["result"]["data"]["lieferando_id"]][$day][] = [
+                $invalidDates[$day][] = [
                     "startTime" => $opening["startTime"],
                     "endTime" => $opening["endTime"]
                 ];
@@ -212,7 +218,7 @@ class OpeninghoursOverlapLogger {
         $invalidDates = [];
         foreach($lieferandoOpeningsSpecial as $specialOpening) {
             if($this->checkSpecialForOverlap($lieferandoOpeningsSpecial, $specialOpening) == true) {
-                $invalidDates[$mapping["result"]["data"]["lieferando_id"]][$specialOpening["specialDate"]][] = [
+                $invalidDates[$specialOpening["specialDate"]][] = [
                     "startTime" => $specialOpening["startTime"],
                     "endTime" => $specialOpening["endTime"]
                 ];
@@ -311,14 +317,17 @@ class OpeninghoursOverlapLogger {
      * @param $fileName
      * @param array $invalidOpeninghours
      */
-    public function logToFile($fileName, array $invalidOpeninghours) {
-        foreach ($invalidOpeninghours as $entry) {
-            $string = print_r($entry, true);
+    public function logToFile($fileName, array $invalidOpeninghours, $restaurantId) {
+        /*foreach ($invalidOpeninghours as $entry) {
+            $string = "[" . $restaurantId . "]" . print_r($entry, true);
             $string = str_replace(["Array", "(", ")", "=>"], "", $string);
             $string = preg_replace("/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/", "\n", $string);
-            var_dump($fileName);die;
             file_put_contents($fileName,$string, FILE_APPEND);
-        }
+        }*/
 
+        $string = "[" . $restaurantId . "]" . print_r($invalidOpeninghours, true);
+        $string = str_replace(["Array", "(", ")", "=>"], "", $string);
+        $string = preg_replace("/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/", "\n", $string);
+        file_put_contents($fileName,$string, FILE_APPEND);
     }
 }
