@@ -317,14 +317,7 @@ class OpeninghoursOverlapLogger {
      * @param $fileName
      * @param array $invalidOpeninghours
      */
-    public function logToFile($fileName, array $invalidOpeninghours, $restaurantId) {
-        /*foreach ($invalidOpeninghours as $entry) {
-            $string = "[" . $restaurantId . "]" . print_r($entry, true);
-            $string = str_replace(["Array", "(", ")", "=>"], "", $string);
-            $string = preg_replace("/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/", "\n", $string);
-            file_put_contents($fileName,$string, FILE_APPEND);
-        }*/
-
+    public function logToFile($fileName, array $invalidOpeninghours, $restaurantId) {g
         $string = "[" . $restaurantId . "]" . print_r($invalidOpeninghours, true);
         $string = str_replace(["Array", "(", ")", "=>"], "", $string);
         $string = preg_replace("/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/", "\n", $string);
